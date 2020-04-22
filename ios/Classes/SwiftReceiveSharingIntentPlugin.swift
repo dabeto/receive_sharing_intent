@@ -6,34 +6,34 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     static let kMessagesChannel = "receive_sharing_intent/messages";
     static let kEventsChannelMedia = "receive_sharing_intent/events-media";
     static let kEventsChannelLink = "receive_sharing_intent/events-text";
-    
+
     private var initialMedia: [SharedMediaFile]? = nil
     private var latestMedia: [SharedMediaFile]? = nil
-    
+
     private var initialText: String? = nil
     private var latestText: String? = nil
-    
+
     private var eventSinkMedia: FlutterEventSink? = nil;
     private var eventSinkText: FlutterEventSink? = nil;
-    
-    
+
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftReceiveSharingIntentPlugin()
-        
+
         let channel = FlutterMethodChannel(name: kMessagesChannel, binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
-        
+
         let chargingChannelMedia = FlutterEventChannel(name: kEventsChannelMedia, binaryMessenger: registrar.messenger())
         chargingChannelMedia.setStreamHandler(instance)
-        
+
         let chargingChannelLink = FlutterEventChannel(name: kEventsChannelLink, binaryMessenger: registrar.messenger())
         chargingChannelLink.setStreamHandler(instance)
-        
+
         registrar.addApplicationDelegate(instance)
     }
-    
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        
+
         switch call.method {
         case "getInitialMedia":
             result(toJson(data: self.initialMedia));
@@ -49,7 +49,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             result(FlutterMethodNotImplemented);
         }
     }
-    
+
     public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
             return handleUrl(url: url, setInitialData: true)
@@ -64,19 +64,19 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         }
         return false
     }
-    
+
     public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
         return handleUrl(url: url, setInitialData: false)
     }
-    
+
     public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
         return handleUrl(url: userActivity.webpageURL, setInitialData: true)
     }
-    
+
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
         if let url = url {
             let appDomain = Bundle.main.bundleIdentifier!
-            let userDefaults = UserDefaults(suiteName: "group.\(appDomain)")
+            let userDefaults = UserDefaults(suiteName: "group.\(appDomain).sharing")
             if url.fragment == "media" {
                 if let key = url.host?.components(separatedBy: "=").last,
                     let json = userDefaults?.object(forKey: key) as? Data {
@@ -91,7 +91,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         } else if ($0.type == .video && $0.thumbnail == nil) {
                             return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
                         }
-                        
+
                         return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
                     }
                     latestMedia = sharedMediaFiles
@@ -138,8 +138,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         latestText = nil
         return false
     }
-    
-    
+
+
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         if (arguments as! String? == "media") {
             eventSinkMedia = events;
@@ -150,7 +150,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         }
         return nil;
     }
-    
+
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         if (arguments as! String? == "media") {
             eventSinkMedia = nil;
@@ -161,7 +161,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         }
         return nil;
     }
-    
+
     private func getAbsolutePath(for identifier: String) -> String? {
         if (identifier.starts(with: "file://") || identifier.starts(with: "/var/mobile/Media") || identifier.starts(with: "/private/var/mobile")) {
             return identifier.replacingOccurrences(of: "file://", with: "")
@@ -173,7 +173,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         let (url, _) = getFullSizeImageURLAndOrientation(for: phAsset!)
         return url
     }
-    
+
     private func getFullSizeImageURLAndOrientation(for asset: PHAsset)-> (String?, Int) {
            var url: String? = nil
            var orientation: Int = 0
@@ -188,12 +188,12 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
            semaphore.wait()
            return (url, orientation)
        }
-    
+
     private func decode(data: Data) -> [SharedMediaFile] {
         let encodedData = try? JSONDecoder().decode([SharedMediaFile].self, from: data)
         return encodedData!
     }
-    
+
     private func toJson(data: [SharedMediaFile]?) -> String? {
         if data == nil {
             return nil
@@ -202,14 +202,14 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
          let json = String(data: encodedData!, encoding: .utf8)!
         return json
     }
-    
+
     class SharedMediaFile: Codable {
         var path: String;
         var thumbnail: String?; // video thumbnail
         var duration: Double?; // video duration in milliseconds
         var type: SharedMediaType;
-        
-        
+
+
         init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType) {
             self.path = path
             self.thumbnail = thumbnail
@@ -217,7 +217,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             self.type = type
         }
     }
-    
+
     enum SharedMediaType: Int, Codable {
         case image
         case video
