@@ -68,10 +68,10 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
         return handleUrl(url: url, setInitialData: false)
     }
-
-    public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
-        return handleUrl(url: userActivity.webpageURL, setInitialData: true)
-    }
+//this put does not suuport url, this method is deleted because is causing problmes with universal links
+//    public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
+//        return handleUrl(url: userActivity.webpageURL, setInitialData: true)
+//    }
 
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
         if let url = url {
