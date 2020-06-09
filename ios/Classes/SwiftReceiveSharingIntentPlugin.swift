@@ -76,7 +76,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
         if let url = url {
             let appDomain = Bundle.main.bundleIdentifier!
-            let userDefaults = UserDefaults(suiteName: "group.\(appDomain).veci.sharing")
+            let userDefaults = UserDefaults(suiteName: "group.\(appDomain).sh")
             if url.fragment == "media" {
                 if let key = url.host?.components(separatedBy: "=").last,
                     let json = userDefaults?.object(forKey: key) as? Data {
